@@ -1,0 +1,1650 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Rule pact 赛约静态展示：用自然语言生成可审阅的比赛规则，并由确定性裁判完成判分。"
+    />
+    <meta name="theme-color" content="#f1ede4" />
+    <title>Rule pact 赛约 | AI 赛约与可信裁判</title>
+    <style>
+      :root {
+        --ink: #141218;
+        --ink-soft: #28242f;
+        --paper: #f1ede4;
+        --paper-deep: #e5ded1;
+        --white: #fffdf7;
+        --violet: #7857e8;
+        --violet-dark: #4d2db6;
+        --acid: #d8ff68;
+        --muted: #706a75;
+        --line: rgba(20, 18, 24, 0.13);
+        --line-light: rgba(255, 255, 255, 0.13);
+        --success: #26785a;
+        --shadow: 0 28px 80px rgba(43, 32, 69, 0.14);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        background: var(--paper);
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        color: var(--ink);
+        background:
+          radial-gradient(circle at 8% 6%, rgba(120, 87, 232, 0.16), transparent 34rem),
+          radial-gradient(circle at 88% 19%, rgba(216, 255, 104, 0.2), transparent 25rem),
+          var(--paper);
+        font-family:
+          "Avenir Next", "SF Pro Display", "PingFang SC", "Microsoft YaHei", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      input,
+      textarea,
+      select {
+        font: inherit;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      ::selection {
+        color: var(--white);
+        background: var(--violet);
+      }
+
+      .shell {
+        width: min(1220px, calc(100vw - 40px));
+        margin-inline: auto;
+      }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        border-bottom: 1px solid rgba(20, 18, 24, 0.08);
+        background: rgba(241, 237, 228, 0.86);
+        backdrop-filter: blur(18px);
+      }
+
+      .header-inner {
+        min-height: 72px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 20px;
+        font-weight: 760;
+        letter-spacing: -0.035em;
+        white-space: nowrap;
+      }
+
+      .brand-mark {
+        position: relative;
+        width: 34px;
+        height: 34px;
+        display: grid;
+        place-items: center;
+        border-radius: 50%;
+        overflow: hidden;
+        color: var(--acid);
+        background: var(--ink);
+        font-family: Georgia, serif;
+        font-size: 17px;
+      }
+
+      .brand-mark::after {
+        content: "";
+        position: absolute;
+        width: 45px;
+        height: 1px;
+        background: var(--acid);
+        transform: rotate(-35deg);
+      }
+
+      .brand-mark span {
+        position: relative;
+        z-index: 1;
+      }
+
+      .brand small {
+        color: var(--violet);
+        font-family: "Songti SC", Georgia, serif;
+        font-size: 13px;
+      }
+
+      .site-nav {
+        display: flex;
+        align-items: center;
+        gap: 30px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .site-nav a:hover {
+        color: var(--ink);
+      }
+
+      .header-cta {
+        border-radius: 999px;
+        padding: 10px 15px;
+        color: var(--white);
+        background: var(--ink);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .hero {
+        position: relative;
+        min-height: 650px;
+        display: grid;
+        grid-template-columns: minmax(0, 1.03fr) minmax(380px, 0.97fr);
+        gap: 64px;
+        align-items: center;
+        padding: 78px 0 88px;
+      }
+
+      .hero::before {
+        content: "PACT";
+        position: absolute;
+        left: -7px;
+        bottom: -40px;
+        z-index: -1;
+        color: transparent;
+        font-family: Georgia, serif;
+        font-size: 220px;
+        line-height: 0.8;
+        letter-spacing: -0.09em;
+        -webkit-text-stroke: 1px rgba(20, 18, 24, 0.06);
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--violet-dark);
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.13em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 28px;
+        height: 1px;
+        background: currentColor;
+      }
+
+      .hero h1 {
+        max-width: 700px;
+        margin: 22px 0;
+        font-family: "Songti SC", "STSong", Georgia, serif;
+        font-size: clamp(55px, 6.5vw, 91px);
+        font-weight: 500;
+        line-height: 0.98;
+        letter-spacing: -0.06em;
+      }
+
+      .hero h1 em {
+        color: var(--violet);
+        font-style: italic;
+      }
+
+      .hero-copy {
+        max-width: 600px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 1.78;
+      }
+
+      .hero-actions {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        margin-top: 30px;
+        flex-wrap: wrap;
+      }
+
+      .primary-button,
+      .secondary-button,
+      .ghost-button {
+        min-height: 44px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 18px;
+        border: 0;
+        font-size: 13px;
+        font-weight: 700;
+        transition:
+          transform 160ms ease,
+          background 160ms ease,
+          opacity 160ms ease;
+      }
+
+      .primary-button {
+        color: var(--white);
+        background: var(--violet);
+        box-shadow: 0 11px 28px rgba(120, 87, 232, 0.22);
+      }
+
+      .primary-button:hover {
+        background: var(--violet-dark);
+        transform: translateY(-1px);
+      }
+
+      .secondary-button {
+        border: 1px solid var(--line);
+        color: var(--ink);
+        background: rgba(255, 253, 247, 0.78);
+      }
+
+      .ghost-button {
+        padding-inline: 13px;
+        color: var(--violet-dark);
+        background: rgba(120, 87, 232, 0.09);
+      }
+
+      .hero-stats {
+        display: flex;
+        gap: 28px;
+        margin-top: 38px;
+      }
+
+      .hero-stat {
+        padding-left: 13px;
+        border-left: 1px solid var(--line);
+      }
+
+      .hero-stat b {
+        display: block;
+        font-family: Georgia, serif;
+        font-size: 20px;
+        font-weight: 500;
+      }
+
+      .hero-stat span {
+        color: var(--muted);
+        font-size: 10px;
+        letter-spacing: 0.05em;
+      }
+
+      .proof-window {
+        position: relative;
+        width: min(500px, 100%);
+        justify-self: end;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 24px;
+        overflow: hidden;
+        color: var(--white);
+        background:
+          radial-gradient(circle at 100% 0%, rgba(216, 255, 104, 0.12), transparent 15rem),
+          var(--ink);
+        box-shadow: var(--shadow);
+        transform: rotate(1.2deg);
+      }
+
+      .proof-top {
+        padding: 17px 20px;
+        border-bottom: 1px solid var(--line-light);
+        display: flex;
+        justify-content: space-between;
+        color: rgba(255, 255, 255, 0.45);
+        font-family: ui-monospace, monospace;
+        font-size: 9px;
+        letter-spacing: 0.09em;
+      }
+
+      .window-dots {
+        display: flex;
+        gap: 5px;
+      }
+
+      .window-dots i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.25);
+      }
+
+      .window-dots i:first-child {
+        background: #ef7c69;
+      }
+
+      .window-dots i:nth-child(2) {
+        background: #e4c553;
+      }
+
+      .window-dots i:last-child {
+        background: #6fca93;
+      }
+
+      .proof-body {
+        padding: 25px;
+      }
+
+      .proof-title {
+        margin: 0;
+        font-family: "Songti SC", Georgia, serif;
+        font-size: 27px;
+        font-weight: 500;
+      }
+
+      .proof-subtitle {
+        margin: 7px 0 21px;
+        color: rgba(255, 255, 255, 0.47);
+        font-size: 11px;
+      }
+
+      .duel {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .player-card {
+        padding: 20px 15px;
+        border: 1px solid var(--line-light);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.045);
+        text-align: center;
+      }
+
+      .player-badge {
+        width: 30px;
+        height: 30px;
+        display: grid;
+        place-items: center;
+        margin: 0 auto 14px;
+        border-radius: 50%;
+        color: var(--acid);
+        background: rgba(216, 255, 104, 0.1);
+        font-family: ui-monospace, monospace;
+        font-size: 10px;
+      }
+
+      .player-score {
+        display: block;
+        font-family: Georgia, serif;
+        font-size: 42px;
+        line-height: 1;
+      }
+
+      .player-name {
+        color: rgba(255, 255, 255, 0.42);
+        font-family: ui-monospace, monospace;
+        font-size: 9px;
+      }
+
+      .versus {
+        color: rgba(255, 255, 255, 0.28);
+        font-family: ui-monospace, monospace;
+        font-size: 9px;
+      }
+
+      .verdict {
+        margin-top: 16px;
+        padding: 15px;
+        border: 1px solid rgba(216, 255, 104, 0.2);
+        border-radius: 13px;
+        background: rgba(216, 255, 104, 0.07);
+      }
+
+      .verdict-label {
+        color: var(--acid);
+        font-size: 9px;
+        font-weight: 750;
+        letter-spacing: 0.08em;
+      }
+
+      .verdict p {
+        margin: 7px 0 0;
+        color: rgba(255, 255, 255, 0.66);
+        font-size: 11px;
+        line-height: 1.6;
+      }
+
+      .fingerprints {
+        display: grid;
+        gap: 9px;
+        margin-top: 18px;
+        padding-top: 15px;
+        border-top: 1px solid var(--line-light);
+      }
+
+      .fingerprint {
+        display: flex;
+        justify-content: space-between;
+        gap: 15px;
+        color: rgba(255, 255, 255, 0.39);
+        font-family: ui-monospace, monospace;
+        font-size: 9px;
+      }
+
+      .fingerprint code {
+        color: rgba(255, 255, 255, 0.68);
+      }
+
+      .floating-tag {
+        position: absolute;
+        left: -48px;
+        bottom: 76px;
+        padding: 9px 12px;
+        border: 1px solid rgba(255, 255, 255, 0.17);
+        border-radius: 10px;
+        color: rgba(255, 255, 255, 0.72);
+        background: rgba(20, 18, 24, 0.9);
+        backdrop-filter: blur(8px);
+        font-size: 9px;
+        box-shadow: 0 12px 30px rgba(20, 18, 24, 0.18);
+      }
+
+      .trust-strip {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        padding: 1px;
+        background: var(--line);
+        border-block: 1px solid var(--line);
+      }
+
+      .trust-item {
+        padding: 19px 24px;
+        background: var(--paper);
+      }
+
+      .trust-item small {
+        display: block;
+        color: var(--muted);
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .trust-item b {
+        display: block;
+        margin-top: 5px;
+        font-family: Georgia, serif;
+        font-size: 19px;
+        font-weight: 500;
+      }
+
+      .section {
+        padding: 92px 0;
+      }
+
+      .section-heading {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 28px;
+        margin-bottom: 34px;
+      }
+
+      .section-heading h2 {
+        margin: 9px 0 0;
+        font-family: "Songti SC", "STSong", Georgia, serif;
+        font-size: clamp(36px, 4.4vw, 55px);
+        font-weight: 500;
+        line-height: 1.07;
+        letter-spacing: -0.045em;
+      }
+
+      .section-heading p {
+        max-width: 450px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.72;
+      }
+
+      .demo-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        margin-bottom: 13px;
+        padding: 6px 10px;
+        border: 1px solid rgba(120, 87, 232, 0.2);
+        border-radius: 999px;
+        color: var(--violet-dark);
+        background: rgba(120, 87, 232, 0.07);
+        font-size: 10px;
+        font-weight: 750;
+        letter-spacing: 0.04em;
+      }
+
+      .demo-badge::before {
+        content: "";
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--violet);
+      }
+
+      .workshop {
+        display: grid;
+        grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1.2fr);
+        border: 1px solid var(--line);
+        border-radius: 22px;
+        overflow: hidden;
+        background: rgba(255, 253, 247, 0.72);
+        box-shadow: 0 22px 65px rgba(43, 32, 69, 0.07);
+      }
+
+      .workshop-form {
+        padding: 28px;
+        border-right: 1px solid var(--line);
+      }
+
+      .workshop-preview {
+        padding: 28px;
+        background:
+          radial-gradient(circle at 95% 5%, rgba(216, 255, 104, 0.14), transparent 14rem),
+          rgba(120, 87, 232, 0.035);
+      }
+
+      .panel-kicker {
+        color: var(--violet);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .panel-title {
+        margin: 7px 0 21px;
+        font-size: 19px;
+      }
+
+      .form-field {
+        display: grid;
+        gap: 7px;
+        margin-bottom: 15px;
+      }
+
+      .form-field label {
+        color: #4d4852;
+        font-size: 11px;
+        font-weight: 700;
+      }
+
+      .form-field textarea,
+      .form-field input,
+      .form-field select {
+        width: 100%;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 12px 13px;
+        color: var(--ink);
+        background: var(--white);
+        outline: 0;
+      }
+
+      .form-field textarea {
+        min-height: 136px;
+        resize: vertical;
+        line-height: 1.65;
+      }
+
+      .form-field textarea:focus,
+      .form-field input:focus,
+      .form-field select:focus {
+        border-color: var(--violet);
+        box-shadow: 0 0 0 3px rgba(120, 87, 232, 0.1);
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .counter {
+        justify-self: end;
+        margin-top: -3px;
+        color: var(--muted);
+        font-family: ui-monospace, monospace;
+        font-size: 9px;
+      }
+
+      .workshop-form .primary-button {
+        width: 100%;
+        margin-top: 5px;
+      }
+
+      .form-note {
+        margin: 12px 0 0;
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1.55;
+      }
+
+      .preview-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 18px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .preview-title {
+        margin: 7px 0 4px;
+        font-family: "Songti SC", Georgia, serif;
+        font-size: 27px;
+        font-weight: 500;
+        line-height: 1.18;
+      }
+
+      .preview-meta {
+        color: var(--muted);
+        font-size: 10px;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        flex: 0 0 auto;
+        padding: 6px 9px;
+        border: 1px solid rgba(38, 120, 90, 0.2);
+        border-radius: 999px;
+        color: var(--success);
+        background: rgba(38, 120, 90, 0.07);
+        font-size: 9px;
+        font-weight: 750;
+      }
+
+      .status-pill::before {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: currentColor;
+      }
+
+      .rule-points {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 9px;
+        margin: 17px 0;
+      }
+
+      .rule-point {
+        min-width: 0;
+        padding: 12px;
+        border: 1px solid var(--line);
+        border-radius: 11px;
+        background: rgba(255, 255, 255, 0.55);
+      }
+
+      .rule-point small {
+        display: block;
+        margin-bottom: 5px;
+        color: var(--muted);
+        font-size: 8px;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+      }
+
+      .rule-point b {
+        display: block;
+        overflow: hidden;
+        font-size: 12px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .rule-point span {
+        display: block;
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 9px;
+      }
+
+      .summary-list {
+        display: grid;
+        gap: 8px;
+        padding: 0;
+        margin: 0 0 16px;
+        list-style: none;
+      }
+
+      .summary-list li {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        color: #3f3a45;
+        font-size: 11px;
+        line-height: 1.55;
+      }
+
+      .summary-list li::before {
+        content: "↗";
+        color: var(--violet);
+        font-weight: 800;
+      }
+
+      .rule-terminal {
+        padding: 15px;
+        border-radius: 12px;
+        overflow: auto;
+        color: rgba(255, 255, 255, 0.72);
+        background: var(--ink);
+        font-family: ui-monospace, "SFMono-Regular", monospace;
+        font-size: 9px;
+        line-height: 1.7;
+      }
+
+      .rule-terminal .accent {
+        color: var(--acid);
+      }
+
+      .fingerprint-line {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        color: var(--muted);
+        font-family: ui-monospace, monospace;
+        font-size: 9px;
+        word-break: break-all;
+      }
+
+      .preview-actions {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 16px;
+        flex-wrap: wrap;
+      }
+
+      .copy-state {
+        color: var(--success);
+        font-size: 10px;
+      }
+
+      .process-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        overflow: hidden;
+        background: rgba(255, 253, 247, 0.72);
+      }
+
+      .process-step {
+        min-height: 255px;
+        padding: 26px;
+        border-right: 1px solid var(--line);
+      }
+
+      .process-step:last-child {
+        border-right: 0;
+      }
+
+      .process-number {
+        color: var(--violet);
+        font-family: ui-monospace, monospace;
+        font-size: 10px;
+      }
+
+      .process-icon {
+        width: 43px;
+        height: 43px;
+        display: grid;
+        place-items: center;
+        margin: 38px 0 19px;
+        border-radius: 13px;
+        background: var(--paper);
+        font-family: Georgia, serif;
+        font-size: 20px;
+        font-style: italic;
+      }
+
+      .process-step h3 {
+        margin: 0 0 9px;
+        font-size: 16px;
+      }
+
+      .process-step p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.68;
+      }
+
+      .match-board {
+        display: grid;
+        grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+        gap: 20px;
+      }
+
+      .match-card,
+      .audit-card {
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        overflow: hidden;
+        background: rgba(255, 253, 247, 0.76);
+      }
+
+      .match-head,
+      .audit-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 15px;
+        padding: 19px 22px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .match-head h3,
+      .audit-head h3 {
+        margin: 0;
+        font-size: 15px;
+      }
+
+      .match-content,
+      .audit-content {
+        padding: 22px;
+      }
+
+      .match-score {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 24px;
+        padding: 20px 0 25px;
+      }
+
+      .match-player {
+        text-align: center;
+      }
+
+      .match-player strong {
+        display: block;
+        font-family: Georgia, serif;
+        font-size: 48px;
+        font-weight: 500;
+        line-height: 1;
+      }
+
+      .match-player span {
+        color: var(--muted);
+        font-family: ui-monospace, monospace;
+        font-size: 9px;
+      }
+
+      .match-divider {
+        color: var(--muted);
+        font-family: ui-monospace, monospace;
+        font-size: 10px;
+      }
+
+      .round-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .round-row {
+        display: grid;
+        grid-template-columns: 38px 1fr auto;
+        gap: 10px;
+        align-items: center;
+        padding: 11px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.46);
+        font-size: 10px;
+      }
+
+      .round-row b {
+        color: var(--violet);
+        font-family: ui-monospace, monospace;
+      }
+
+      .round-row span {
+        color: var(--muted);
+      }
+
+      .round-row code {
+        font-family: ui-monospace, monospace;
+        font-size: 9px;
+      }
+
+      .audit-card {
+        color: var(--white);
+        background:
+          radial-gradient(circle at 100% 0%, rgba(216, 255, 104, 0.12), transparent 12rem),
+          var(--ink);
+      }
+
+      .audit-head {
+        border-color: var(--line-light);
+      }
+
+      .audit-content {
+        display: grid;
+        gap: 17px;
+      }
+
+      .audit-result {
+        color: var(--acid);
+        font-family: Georgia, serif;
+        font-size: 29px;
+      }
+
+      .audit-copy {
+        margin: -8px 0 0;
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 11px;
+        line-height: 1.65;
+      }
+
+      .audit-line {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding-top: 12px;
+        border-top: 1px solid var(--line-light);
+        color: rgba(255, 255, 255, 0.4);
+        font-size: 9px;
+      }
+
+      .audit-line code {
+        overflow: hidden;
+        color: rgba(255, 255, 255, 0.7);
+        font-family: ui-monospace, monospace;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .monad-grid {
+        display: grid;
+        grid-template-columns: 0.8fr 1.2fr;
+        gap: 60px;
+        align-items: start;
+      }
+
+      .monad-copy h2 {
+        margin: 10px 0 18px;
+        font-family: "Songti SC", Georgia, serif;
+        font-size: clamp(38px, 4.6vw, 58px);
+        font-weight: 500;
+        line-height: 1.06;
+        letter-spacing: -0.05em;
+      }
+
+      .monad-copy p {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.75;
+      }
+
+      .monad-points {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .monad-point {
+        min-height: 165px;
+        padding: 21px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255, 253, 247, 0.66);
+      }
+
+      .monad-point small {
+        color: var(--violet);
+        font-family: ui-monospace, monospace;
+        font-size: 9px;
+        letter-spacing: 0.07em;
+      }
+
+      .monad-point h3 {
+        margin: 29px 0 8px;
+        font-size: 15px;
+      }
+
+      .monad-point p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 11px;
+        line-height: 1.65;
+      }
+
+      .site-footer {
+        padding: 34px 0 44px;
+        border-top: 1px solid var(--line);
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .site-footer strong {
+        color: var(--ink);
+      }
+
+      .reveal {
+        opacity: 0;
+        transform: translateY(18px);
+        transition:
+          opacity 600ms ease,
+          transform 600ms ease;
+      }
+
+      .reveal.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      @media (max-width: 900px) {
+        .hero {
+          grid-template-columns: 1fr;
+          gap: 50px;
+          padding-top: 58px;
+        }
+
+        .proof-window {
+          justify-self: center;
+          transform: none;
+        }
+
+        .floating-tag {
+          left: 12px;
+        }
+
+        .workshop,
+        .match-board,
+        .monad-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .workshop-form {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .process-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .process-step:nth-child(2) {
+          border-right: 0;
+        }
+
+        .process-step:nth-child(-n + 2) {
+          border-bottom: 1px solid var(--line);
+        }
+      }
+
+      @media (max-width: 640px) {
+        .shell {
+          width: min(100% - 24px, 1220px);
+        }
+
+        .header-inner {
+          min-height: 62px;
+          gap: 10px;
+        }
+
+        .brand {
+          gap: 7px;
+          font-size: 16px;
+        }
+
+        .brand-mark {
+          width: 30px;
+          height: 30px;
+        }
+
+        .brand small {
+          font-size: 10px;
+        }
+
+        .site-nav {
+          display: none;
+        }
+
+        .header-cta {
+          padding: 9px 11px;
+          font-size: 10px;
+        }
+
+        .hero {
+          min-height: auto;
+          padding: 48px 0 62px;
+        }
+
+        .hero::before {
+          font-size: 110px;
+        }
+
+        .hero h1 {
+          font-size: 54px;
+        }
+
+        .hero-stats {
+          gap: 14px;
+        }
+
+        .hero-stat {
+          padding-left: 9px;
+        }
+
+        .hero-stat b {
+          font-size: 16px;
+        }
+
+        .proof-body {
+          padding: 19px;
+        }
+
+        .proof-title {
+          font-size: 23px;
+        }
+
+        .duel {
+          gap: 8px;
+        }
+
+        .player-score {
+          font-size: 35px;
+        }
+
+        .trust-strip {
+          grid-template-columns: 1fr 1fr;
+        }
+
+        .section {
+          padding: 64px 0;
+        }
+
+        .section-heading {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .section-heading h2 {
+          font-size: 38px;
+        }
+
+        .workshop-form,
+        .workshop-preview,
+        .match-content,
+        .audit-content {
+          padding: 20px;
+        }
+
+        .rule-points,
+        .form-row,
+        .process-grid,
+        .monad-points {
+          grid-template-columns: 1fr;
+        }
+
+        .process-step {
+          min-height: auto;
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+
+        .process-step:last-child {
+          border-bottom: 0;
+        }
+
+        .process-icon {
+          margin: 24px 0 17px;
+        }
+
+        .match-score {
+          gap: 18px;
+        }
+
+        .monad-grid {
+          gap: 30px;
+        }
+
+        .site-footer {
+          flex-direction: column;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        *,
+        *::before,
+        *::after {
+          animation: none !important;
+          transition: none !important;
+        }
+
+        .reveal {
+          opacity: 1;
+          transform: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="shell header-inner">
+        <a class="brand" href="#top" aria-label="Rule pact 赛约首页">
+          <span class="brand-mark"><span>R</span></span>
+          Rule pact <small>赛约</small>
+        </a>
+        <nav class="site-nav" aria-label="主要导航">
+          <a href="#workshop">规则工坊</a>
+          <a href="#how-it-works">裁判机制</a>
+          <a href="#monad">链上公证</a>
+        </nav>
+        <a class="header-cta" href="#workshop">体验规则生成</a>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="shell hero">
+        <div class="reveal">
+          <span class="eyebrow">Rule pact · 可信竞赛裁判</span>
+          <h1>先对齐规则，<br />再让胜负<em>生效</em>。</h1>
+          <p class="hero-copy">
+            用自然语言描述比赛，生成可审阅、可复算的赛约。自动裁判逐局执行，
+            最后把规则、证据和结果绑定成一条不可篡改的竞赛记录。
+          </p>
+          <div class="hero-actions">
+            <a class="primary-button" href="#workshop">生成一条赛约 →</a>
+            <a class="secondary-button" href="#how-it-works">看看如何判分</a>
+          </div>
+          <div class="hero-stats" aria-label="产品特点">
+            <div class="hero-stat"><b>&lt; 1s</b><span>生成规则草稿</span></div>
+            <div class="hero-stat"><b>100%</b><span>判分过程可复核</span></div>
+            <div class="hero-stat"><b>MONAD</b><span>测试网记录</span></div>
+          </div>
+        </div>
+
+        <article class="proof-window reveal" aria-label="比赛裁决示例">
+          <div class="proof-top">
+            <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span>PROOF / MATCH_042</span>
+            <span>✓</span>
+          </div>
+          <div class="proof-body">
+            <div class="panel-kicker">社区三分球挑战</div>
+            <h2 class="proof-title">60 秒 · 命中更多者胜</h2>
+            <p class="proof-subtitle">RULESET_V1 · 2 PLAYERS · FINAL</p>
+            <div class="duel">
+              <div class="player-card">
+                <span class="player-badge">A</span>
+                <strong class="player-score">08</strong>
+                <span class="player-name">LIN.MON</span>
+              </div>
+              <span class="versus">VS</span>
+              <div class="player-card">
+                <span class="player-badge">B</span>
+                <strong class="player-score">06</strong>
+                <span class="player-name">MO.MON</span>
+              </div>
+            </div>
+            <div class="verdict">
+              <span class="verdict-label">DETERMINISTIC VERDICT</span>
+              <p>A 的有效命中比 B 多 2 次，依据“命中数更高者获胜”判定 A 获胜。</p>
+            </div>
+            <div class="fingerprints">
+              <div class="fingerprint"><span>规则指纹</span><code>0x8f3a…12c9</code></div>
+              <div class="fingerprint"><span>证据指纹</span><code>0x77be…d410</code></div>
+              <div class="fingerprint"><span>结果指纹</span><code>0xc291…9a02</code></div>
+            </div>
+          </div>
+          <span class="floating-tag">✦ AI 提议 · 规则校验 · 确定性执行</span>
+        </article>
+      </section>
+
+      <div class="shell">
+        <div class="trust-strip reveal">
+          <div class="trust-item"><small>身份</small><b>钱包签名</b></div>
+          <div class="trust-item"><small>规则</small><b>受控 DSL</b></div>
+          <div class="trust-item"><small>公证</small><b>Monad 测试网</b></div>
+          <div class="trust-item"><small>追溯</small><b>逐局证据哈希</b></div>
+        </div>
+      </div>
+
+      <section class="shell section" id="workshop">
+        <div class="section-heading reveal">
+          <div>
+            <span class="demo-badge">STATIC SHOWCASE · 本地演示</span>
+            <span class="eyebrow">Rule workshop</span>
+            <h2>把一句话，变成可审阅的赛约</h2>
+          </div>
+          <p>
+            这是无需后端的静态互动展示。规则只在浏览器中生成预览，用于体验产品流程与界面；
+            真实 AI、钱包认证和链上公证请使用完整应用。
+          </p>
+        </div>
+
+        <div class="workshop reveal">
+          <form class="workshop-form" id="rule-form">
+            <div class="panel-kicker">01 / Define</div>
+            <h3 class="panel-title">描述你的比赛</h3>
+            <div class="form-field">
+              <label for="description">比赛描述</label>
+              <textarea id="description" maxlength="800" required>两人进行三局两胜的桌上足球比赛。每局记录是否获胜和本局净胜球，累计赢两局者获胜。</textarea>
+              <span class="counter" id="char-count">38 / 800</span>
+            </div>
+            <div class="form-row">
+              <div class="form-field">
+                <label for="players">参与人数</label>
+                <select id="players">
+                  <option value="2" selected>2 人</option>
+                  <option value="3">3 人</option>
+                  <option value="4">4 人</option>
+                  <option value="5">5 人</option>
+                  <option value="6">6 人</option>
+                </select>
+              </div>
+              <div class="form-field">
+                <label for="rounds">最多局数</label>
+                <input id="rounds" type="number" min="1" max="9" value="3" />
+              </div>
+            </div>
+            <button class="primary-button" type="submit">✦ 生成规则草案</button>
+            <p class="form-note">
+              静态版规则由页面内固定逻辑生成，不发送网络请求，也不会要求或保存 AI Key。
+            </p>
+          </form>
+
+          <div class="workshop-preview" aria-live="polite">
+            <div class="preview-header">
+              <div>
+                <div class="panel-kicker">02 / Review</div>
+                <h3 class="preview-title" id="preview-title">两人进行三局两胜的桌上足球比赛</h3>
+                <span class="preview-meta" id="preview-meta">2 人 · 最多 3 局 · 获胜局数决定胜负</span>
+              </div>
+              <span class="status-pill">本地规则 · 已预览</span>
+            </div>
+            <div class="rule-points">
+              <div class="rule-point">
+                <small>胜出指标</small>
+                <b>累计胜局</b>
+                <span>越高越好</span>
+              </div>
+              <div class="rule-point">
+                <small>提前结束</small>
+                <b>先赢 2 局</b>
+                <span>或达到局数上限</span>
+              </div>
+              <div class="rule-point">
+                <small>同分策略</small>
+                <b>净胜球</b>
+                <span>总和更高者胜</span>
+              </div>
+            </div>
+            <ul class="summary-list" id="summary-list">
+              <li>每局参与者提交“是否获胜”和“本局净胜球”。</li>
+              <li>获胜一局计 1 分，全部参与者提交后才结算。</li>
+              <li>任一方先累计赢得 2 局时提前结束。</li>
+              <li>胜负局数相同时，比较全程净胜球总和。</li>
+            </ul>
+            <div class="rule-terminal">
+              <span class="accent">WHEN</span> round.complete<br />
+              &nbsp;&nbsp;<span class="accent">IF</span> wins.sum &gt;= target<br />
+              &nbsp;&nbsp;<span class="accent">THEN</span> finalize(highest(wins.sum), tie(score.sum))<br />
+              &nbsp;&nbsp;<span class="accent">ELSE</span> nextRound()
+            </div>
+            <div class="fingerprint-line">
+              <span>规则指纹</span>
+              <code id="rule-hash">计算中…</code>
+            </div>
+            <div class="preview-actions">
+              <button class="ghost-button" id="copy-rule" type="button">复制规则 JSON</button>
+              <span class="copy-state" id="copy-state" role="status"></span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="shell section" id="how-it-works">
+        <div class="section-heading reveal">
+          <div>
+            <span class="eyebrow">How it works</span>
+            <h2>从规则到结果，每一步都有依据</h2>
+          </div>
+          <p>AI 只提出结构化规则，确定性执行器负责判分，链上记录负责留下不可篡改的证明。</p>
+        </div>
+        <div class="process-grid reveal">
+          <article class="process-step">
+            <span class="process-number">01</span>
+            <div class="process-icon">Ai</div>
+            <h3>描述赛制</h3>
+            <p>写清参与者、每局数据和结束条件，让系统生成结构化规则草案。</p>
+          </article>
+          <article class="process-step">
+            <span class="process-number">02</span>
+            <div class="process-icon">{ }</div>
+            <h3>检阅赛约</h3>
+            <p>确认计分方式、胜负指标和平局策略，并锁定规则指纹。</p>
+          </article>
+          <article class="process-step">
+            <span class="process-number">03</span>
+            <div class="process-icon">✓</div>
+            <h3>自动判分</h3>
+            <p>参与者提交每局数据，服务端按唯一版本规则计算结果。</p>
+          </article>
+          <article class="process-step">
+            <span class="process-number">04</span>
+            <div class="process-icon">◈</div>
+            <h3>链上留证</h3>
+            <p>规则、轮次、结果和异议分别形成哈希，可随时回查。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="shell section">
+        <div class="section-heading reveal">
+          <div>
+            <span class="eyebrow">Replayable evidence</span>
+            <h2>比赛结束，不是记录的终点</h2>
+          </div>
+          <p>每一轮提交都形成独立证据，最终结果可以逐轮回看，不会只留下一个孤立的比分。</p>
+        </div>
+        <div class="match-board reveal">
+          <article class="match-card">
+            <div class="match-head">
+              <h3>桌上足球 · 第 2 局</h3>
+              <span class="status-pill">已完成</span>
+            </div>
+            <div class="match-content">
+              <div class="match-score">
+                <div class="match-player"><strong>2</strong><span>0x71F…8C2</span></div>
+                <span class="match-divider">FINAL</span>
+                <div class="match-player"><strong>0</strong><span>0xE92…A41</span></div>
+              </div>
+              <div class="round-list">
+                <div class="round-row"><b>#01</b><span>2 人提交 · 规则 A 胜</span><code>0x54b7…6084</code></div>
+                <div class="round-row"><b>#02</b><span>2 人提交 · 规则 A 胜</span><code>0x339b…a4c9</code></div>
+              </div>
+            </div>
+          </article>
+          <aside class="audit-card">
+            <div class="audit-head"><h3>链上凭证</h3><span>Monad</span></div>
+            <div class="audit-content">
+              <span class="panel-kicker">Final attestation</span>
+              <div class="audit-result">A 获胜</div>
+              <p class="audit-copy">任一方累计赢得 2 局，自动裁判结束比赛。最终结果与逐局证据绑定。</p>
+              <div class="audit-line"><span>规则哈希</span><code>0x7744…fce2</code></div>
+              <div class="audit-line"><span>结果哈希</span><code>0xb067…b617</code></div>
+              <div class="audit-line"><span>登记网络</span><code>MONAD TESTNET</code></div>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="shell section" id="monad">
+        <div class="monad-grid">
+          <div class="monad-copy reveal">
+            <span class="eyebrow">Why Monad</span>
+            <h2>不是把整场比赛搬上链</h2>
+            <p>
+              原始数据保持可查询，链上只保存规则和证据的承诺。
+              这样既控制成本，也能验证规则是否被偷偷替换。
+            </p>
+            <a class="secondary-button" href="https://github.com/JantGa/rule-pact-saiyue" target="_blank" rel="noreferrer">
+              查看完整源码 ↗
+            </a>
+          </div>
+          <div class="monad-points reveal">
+            <article class="monad-point"><small>RULE</small><h3>规则先锁</h3><p>确认后生成唯一规则哈希，开赛后无法静默修改。</p></article>
+            <article class="monad-point"><small>EVIDENCE</small><h3>逐局可回放</h3><p>每局提交和结算分别形成证据指纹，输赢链路可复核。</p></article>
+            <article class="monad-point"><small>RESULT</small><h3>结果成历史</h3><p>胜者、证据摘要和比赛 ID 永久绑定，可查询历史战绩。</p></article>
+            <article class="monad-point"><small>VOICE</small><h3>异议不消失</h3><p>参与者可署名保留异议，与最终结果同时记录。</p></article>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="shell site-footer">
+      <span><strong>Rule pact 赛约</strong> · 让竞技结果经得起回看</span>
+      <span>STATIC SHOWCASE · 2026 · BUILT ON MONAD</span>
+      <a href="#top">回到顶部 ↑</a>
+    </footer>
+
+    <script>
+      const description = document.querySelector("#description");
+      const players = document.querySelector("#players");
+      const rounds = document.querySelector("#rounds");
+      const charCount = document.querySelector("#char-count");
+      const form = document.querySelector("#rule-form");
+      const previewTitle = document.querySelector("#preview-title");
+      const previewMeta = document.querySelector("#preview-meta");
+      const summaryList = document.querySelector("#summary-list");
+      const ruleHash = document.querySelector("#rule-hash");
+      const copyRule = document.querySelector("#copy-rule");
+      const copyState = document.querySelector("#copy-state");
+      let currentSpec = null;
+
+      function updateCount() {
+        charCount.textContent = `${description.value.length} / 800`;
+      }
+
+      function titleFromDescription(value) {
+        const first = value.split(/[。！？.!?\n]/)[0].trim();
+        if (!first) return "自定比赛";
+        return first.length > 32 ? `${first.slice(0, 32)}…` : first;
+      }
+
+      async function hashSpec(value) {
+        const text = JSON.stringify(value);
+        if (window.crypto && window.crypto.subtle) {
+          const digest = await window.crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+          return `0x${Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("")}`;
+        }
+        let hash = 0;
+        for (let index = 0; index < text.length; index += 1) {
+          hash = (hash * 31 + text.charCodeAt(index)) >>> 0;
+        }
+        return `0x${hash.toString(16).padStart(64, "0")}`;
+      }
+
+      function makeSpec() {
+        const totalRounds = Math.max(1, Math.min(9, Number(rounds.value) || 3));
+        const totalPlayers = Math.max(2, Math.min(6, Number(players.value) || 2));
+        const target = Math.max(1, Math.floor(totalRounds / 2) + 1);
+        return {
+          version: 1,
+          title: titleFromDescription(description.value),
+          description: description.value.trim(),
+          playerCount: { min: 2, max: totalPlayers },
+          maxRounds: totalRounds,
+          inputFields: [
+            { key: "won", label: "本局获胜", type: "boolean", required: true },
+            { key: "score", label: "本局净胜球", type: "number", required: true, min: -100, max: 100 }
+          ],
+          scoring: [{ id: "round-win", label: "单局获胜", points: 1, when: { field: "won", op: "eq", value: true } }],
+          endConditions: [{ label: `任一方累计赢得 ${target} 局`, scope: "any", when: { field: "won.sum", op: "gte", value: target } }],
+          winner: { metric: "points", aggregation: "sum", direction: "highest" },
+          tieBreakers: [{ metric: "score.sum", aggregation: "sum", direction: "highest" }]
+        };
+      }
+
+      async function generate(event) {
+        event?.preventDefault();
+        currentSpec = makeSpec();
+        const target = Math.max(1, Math.floor(currentSpec.maxRounds / 2) + 1);
+        previewTitle.textContent = currentSpec.title;
+        previewMeta.textContent = `${currentSpec.playerCount.min}-${currentSpec.playerCount.max} 人 · 最多 ${currentSpec.maxRounds} 局 · 获胜局数决定胜负`;
+        summaryList.innerHTML = [
+          "每局参与者提交“是否获胜”和“本局净胜球”。",
+          "获胜一局计 1 分，全部参与者提交后才结算。",
+          `任一方先累计赢得 ${target} 局${currentSpec.maxRounds > 1 ? "时提前结束" : "时结束比赛"}。`,
+          "胜负局数相同时，比较全程净胜球总和。"
+        ].map((item) => `<li>${item}</li>`).join("");
+        ruleHash.textContent = "正在计算演示指纹…";
+        ruleHash.textContent = await hashSpec(currentSpec);
+        copyState.textContent = "";
+      }
+
+      async function copy() {
+        if (!currentSpec) return;
+        const text = JSON.stringify(currentSpec, null, 2);
+        try {
+          await navigator.clipboard.writeText(text);
+          copyState.textContent = "已复制规则 JSON";
+        } catch {
+          copyState.textContent = "复制失败，请允许剪贴板权限";
+        }
+        setTimeout(() => {
+          copyState.textContent = "";
+        }, 2200);
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) entry.target.classList.add("visible");
+          });
+        },
+        { threshold: 0.12 }
+      );
+      document.querySelectorAll(".reveal").forEach((element) => observer.observe(element));
+
+      description.addEventListener("input", updateCount);
+      form.addEventListener("submit", generate);
+      copyRule.addEventListener("click", copy);
+      updateCount();
+      generate();
+    </script>
+  </body>
+</html>
+

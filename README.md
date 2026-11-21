@@ -92,6 +92,22 @@ OPENAI_API_KEY=
 OPENAI_MODEL=gpt-4.1-mini
 ```
 
+## 静态展示版
+
+`site/` 是一份独立、无后端依赖的 GitHub Pages 展示页，用于快速预览产品视觉和规则生成交互：
+
+```bash
+python3 -m http.server 4100 --directory site
+```
+
+打开 `http://localhost:4100`。静态版规则由浏览器本地生成，不调用 AI，也不执行钱包认证、比赛持久化或链上写入；完整功能仍以 `web/` 应用为准。
+
+GitHub Pages 地址：
+
+```text
+https://jantga.github.io/rule-pact-saiyue/
+```
+
 ## 测试
 
 ```bash
